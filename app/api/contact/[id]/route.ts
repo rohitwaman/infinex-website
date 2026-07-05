@@ -3,12 +3,14 @@ import { prisma } from "../../../../lib/prisma";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
+
     await prisma.contact.delete({
       where: {
-        id: Number(params.id),
+        id: Number(id),
       },
     });
 
