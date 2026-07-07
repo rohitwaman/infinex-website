@@ -3,10 +3,10 @@ import { prisma } from "../../../../lib/prisma";
 
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params;
 
     await prisma.contact.delete({
       where: {
@@ -19,6 +19,8 @@ export async function DELETE(
       message: "Message deleted successfully",
     });
   } catch (error) {
+    console.error(error);
+
     return NextResponse.json(
       {
         success: false,
