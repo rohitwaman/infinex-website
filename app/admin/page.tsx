@@ -1,20 +1,30 @@
-import { prisma } from "../../lib/prisma";
+import { revalidatePath } from "next/cache";
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+
 async function deleteContact(formData: FormData) {
   "use server";
 
   const id = Number(formData.get("id"));
 
-  await prisma.contact.delete({
-    where: { id },
-  });
+  await supabaseAdmin.from("Contact").delete().eq("id", id);
+
+  revalidatePath("/admin");
 }
 
 export default async function AdminPage() {
-  const contacts = await prisma.contact.findMany({
-    orderBy: { createdAt: "desc" },
-  });
+  const { data: contacts, error } = await supabaseAdmin
+    .from("Contact")
+    .select("*")
+    .order("createdAt", { ascending: false });
+
+  if (error) {
+    console.error("Admin fetch error:", error);
+  }
+
+  const inquiries = contacts || [];
 
   return (
     <main className="min-h-screen bg-slate-950 p-10 text-white">
@@ -22,7 +32,9 @@ export default async function AdminPage() {
         <h1 className="text-4xl font-bold text-blue-400">Admin Dashboard</h1>
 
         <div className="mt-8 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-          <h2 className="text-2xl font-bold">Total Inquiries: {contacts.length}</h2>
+          <h2 className="text-2xl font-bold">
+            Total Inquiries: {inquiries.length}
+          </h2>
         </div>
 
         <div className="mt-10 overflow-hidden rounded-2xl border border-slate-800">
@@ -38,7 +50,7 @@ export default async function AdminPage() {
             </thead>
 
             <tbody>
-              {contacts.map((contact) => (
+              {inquiries.map((contact) => (
                 <tr key={contact.id} className="border-t border-slate-800">
                   <td className="p-4">{contact.name}</td>
                   <td className="p-4 text-slate-300">{contact.email}</td>
@@ -57,7 +69,7 @@ export default async function AdminPage() {
                 </tr>
               ))}
 
-              {contacts.length === 0 && (
+              {inquiries.length === 0 && (
                 <tr>
                   <td colSpan={5} className="p-6 text-center text-slate-400">
                     No inquiries found.
