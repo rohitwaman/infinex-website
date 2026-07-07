@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
-
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 async function deleteContact(formData: FormData) {
   "use server";
 
