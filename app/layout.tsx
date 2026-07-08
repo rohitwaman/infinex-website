@@ -9,7 +9,11 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "The Infinex Technologies",
-  description: "Software Development | AI Solutions | Web Development | Mobile Apps",
+  description:
+    "Software Development | AI Solutions | Web Development | Mobile Apps",
+  verification: {
+    google: "BSdN9770FDQEcYbTgDKmgVBY7Ym1CE9pZ85okYbWzX8",
+  },
 };
 
 export default function RootLayout({
@@ -19,7 +23,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={poppins.className}>{children}</body>
+      <body className={poppins.className}>
+        {children}
+      </body>
     </html>
   );
 }
