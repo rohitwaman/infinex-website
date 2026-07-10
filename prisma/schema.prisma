@@ -8,12 +8,20 @@ datasource db {
 }
 
 model Contact {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(cuid())
   name      String
   email     String
   phone     String?
-  company   String?
-  subject   String?
   message   String
   createdAt DateTime @default(now())
+}
+
+model Portfolio {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  tech        String
+  imageUrl    String?
+  liveUrl     String?
+  createdAt   DateTime @default(now())
 }
