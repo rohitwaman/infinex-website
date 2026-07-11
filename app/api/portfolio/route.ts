@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import prisma from "@/lib/prisma";
 
 type RouteContext = {
   params: Promise<{
@@ -11,10 +9,10 @@ type RouteContext = {
 
 export async function GET(
   request: Request,
-  context: RouteContext
+  { params }: RouteContext
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params;
 
     const project = await prisma.portfolio.findUnique({
       where: { id },
@@ -40,10 +38,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: RouteContext
+  { params }: RouteContext
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params;
     const body = await request.json();
 
     const project = await prisma.portfolio.update({
@@ -70,10 +68,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: RouteContext
+  { params }: RouteContext
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params;
 
     await prisma.portfolio.delete({
       where: { id },
