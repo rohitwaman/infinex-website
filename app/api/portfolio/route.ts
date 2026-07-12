@@ -14,7 +14,13 @@ export async function GET() {
     console.error("GET portfolio error:", error);
 
     return NextResponse.json(
-      { message: "Failed to fetch projects" },
+      {
+        message: "Failed to fetch projects",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown database error",
+      },
       { status: 500 }
     );
   }
@@ -24,20 +30,28 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    if (!body.title || !body.description || !body.tech) {
+    const title = String(body.title || "").trim();
+    const description = String(body.description || "").trim();
+    const tech = String(body.tech || "").trim();
+    const imageUrl = String(body.imageUrl || "").trim();
+    const liveUrl = String(body.liveUrl || "").trim();
+
+    if (!title || !description || !tech) {
       return NextResponse.json(
-        { message: "Title, description and tech are required" },
+        {
+          message: "Title, description and technologies are required",
+        },
         { status: 400 }
       );
     }
 
     const project = await prisma.portfolio.create({
       data: {
-        title: body.title,
-        description: body.description,
-        tech: body.tech,
-        imageUrl: body.imageUrl || null,
-        liveUrl: body.liveUrl || null,
+        title,
+        description,
+        tech,
+        imageUrl: imageUrl || null,
+        liveUrl: liveUrl || null,
       },
     });
 
@@ -46,7 +60,13 @@ export async function POST(request: Request) {
     console.error("POST portfolio error:", error);
 
     return NextResponse.json(
-      { message: "Failed to create project" },
+      {
+        message: "Failed to create project",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown database error",
+      },
       { status: 500 }
     );
   }
