@@ -18,6 +18,7 @@ export default function LeadsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadContacts();
@@ -42,16 +43,85 @@ export default function LeadsPage() {
     }
   }
 
+  async function updateStatus(id: string, status: string) {
+    try {
+      setProcessingId(id);
+
+      const response = await fetch(`/api/contact/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Status update failed");
+        return;
+      }
+
+      setContacts((previousContacts) =>
+        previousContacts.map((contact) =>
+          contact.id === id
+            ? { ...contact, status }
+            : contact
+        )
+      );
+    } catch (error) {
+      console.error("Status update error:", error);
+      alert("Server error");
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  async function deleteContact(id: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this enquiry?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setProcessingId(id);
+
+      const response = await fetch(`/api/contact/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || "Delete failed");
+        return;
+      }
+
+      setContacts((previousContacts) =>
+        previousContacts.filter(
+          (contact) => contact.id !== id
+        )
+      );
+    } catch (error) {
+      console.error("Delete contact error:", error);
+      alert("Server error");
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
   const filteredContacts = contacts.filter((contact) => {
-    const text = `
+    const searchableText = `
       ${contact.name}
       ${contact.email}
       ${contact.phone || ""}
       ${contact.company || ""}
       ${contact.status || ""}
+      ${contact.message || ""}
     `.toLowerCase();
 
-    return text.includes(search.toLowerCase());
+    return searchableText.includes(search.toLowerCase());
   });
 
   return (
@@ -71,7 +141,7 @@ export default function LeadsPage() {
             </h1>
 
             <p className="mt-2 text-slate-400">
-              View and manage enquiries received from the website.
+              View, update and manage enquiries received from the website.
             </p>
           </div>
 
@@ -86,7 +156,7 @@ export default function LeadsPage() {
         <div className="mt-8">
           <input
             type="search"
-            placeholder="Search by name, email, phone, company or status..."
+            placeholder="Search by name, email, phone, company, message or status..."
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="w-full rounded-xl border border-slate-700 bg-slate-900 p-4 outline-none focus:border-blue-500"
@@ -104,7 +174,7 @@ export default function LeadsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[1000px]">
+              <table className="w-full min-w-[1250px]">
                 <thead className="bg-slate-950/70 text-left text-sm text-slate-400">
                   <tr>
                     <th className="px-6 py-4">Client</th>
@@ -113,66 +183,122 @@ export default function LeadsPage() {
                     <th className="px-6 py-4">Message</th>
                     <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4">Date</th>
+                    <th className="px-6 py-4">Actions</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredContacts.map((contact) => (
-                    <tr
-                      key={contact.id}
-                      className="border-t border-slate-800 align-top"
-                    >
-                      <td className="px-6 py-5">
-                        <p className="font-semibold">
-                          {contact.name}
-                        </p>
+                  {filteredContacts.map((contact) => {
+                    const isProcessing =
+                      processingId === contact.id;
 
-                        <a
-                          href={`mailto:${contact.email}`}
-                          className="mt-1 block text-sm text-blue-400"
-                        >
-                          {contact.email}
-                        </a>
-                      </td>
+                    return (
+                      <tr
+                        key={contact.id}
+                        className="border-t border-slate-800 align-top"
+                      >
+                        <td className="px-6 py-5">
+                          <p className="font-semibold">
+                            {contact.name}
+                          </p>
 
-                      <td className="px-6 py-5 text-slate-300">
-                        {contact.phone ? (
                           <a
-                            href={`tel:${contact.phone}`}
-                            className="hover:text-blue-400"
+                            href={`mailto:${contact.email}`}
+                            className="mt-1 block text-sm text-blue-400 hover:text-blue-300"
                           >
-                            {contact.phone}
+                            {contact.email}
                           </a>
-                        ) : (
-                          "Not provided"
-                        )}
-                      </td>
+                        </td>
 
-                      <td className="px-6 py-5 text-slate-300">
-                        {contact.company || "Not provided"}
-                      </td>
+                        <td className="px-6 py-5 text-slate-300">
+                          {contact.phone ? (
+                            <a
+                              href={`tel:${contact.phone}`}
+                              className="hover:text-blue-400"
+                            >
+                              {contact.phone}
+                            </a>
+                          ) : (
+                            "Not provided"
+                          )}
+                        </td>
 
-                      <td className="max-w-sm px-6 py-5 text-sm leading-6 text-slate-400">
-                        {contact.message}
-                      </td>
+                        <td className="px-6 py-5 text-slate-300">
+                          {contact.company || "Not provided"}
+                        </td>
 
-                      <td className="px-6 py-5">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            contact.status?.toLowerCase() === "new"
-                              ? "bg-blue-500/15 text-blue-400"
-                              : "bg-green-500/15 text-green-400"
-                          }`}
-                        >
-                          {contact.status || "New"}
-                        </span>
-                      </td>
+                        <td className="max-w-sm px-6 py-5 text-sm leading-6 text-slate-400">
+                          {contact.message}
+                        </td>
 
-                      <td className="px-6 py-5 text-sm text-slate-400">
-                        {new Date(contact.createdAt).toLocaleString("en-IN")}
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="px-6 py-5">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                              contact.status === "New"
+                                ? "bg-blue-500/15 text-blue-400"
+                                : contact.status === "Contacted"
+                                  ? "bg-yellow-500/15 text-yellow-400"
+                                  : "bg-green-500/15 text-green-400"
+                            }`}
+                          >
+                            {contact.status || "New"}
+                          </span>
+                        </td>
+
+                        <td className="px-6 py-5 text-sm text-slate-400">
+                          {new Date(
+                            contact.createdAt
+                          ).toLocaleString("en-IN")}
+                        </td>
+
+                        <td className="px-6 py-5">
+                          <div className="flex min-w-[190px] flex-col gap-2">
+                            {contact.status !== "Contacted" && (
+                              <button
+                                disabled={isProcessing}
+                                onClick={() =>
+                                  updateStatus(
+                                    contact.id,
+                                    "Contacted"
+                                  )
+                                }
+                                className="rounded-lg bg-yellow-600 px-4 py-2 text-sm font-semibold hover:bg-yellow-700 disabled:opacity-50"
+                              >
+                                Mark Contacted
+                              </button>
+                            )}
+
+                            {contact.status !== "Closed" && (
+                              <button
+                                disabled={isProcessing}
+                                onClick={() =>
+                                  updateStatus(
+                                    contact.id,
+                                    "Closed"
+                                  )
+                                }
+                                className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
+                              >
+                                Mark Closed
+                              </button>
+                            )}
+
+                            <button
+                              disabled={isProcessing}
+                              onClick={() =>
+                                deleteContact(contact.id)
+                              }
+                              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
+                            >
+                              {isProcessing
+                                ? "Processing..."
+                                : "Delete"}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
