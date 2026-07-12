@@ -8,6 +8,8 @@ export default function Contact() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
+    company: "",
     message: "",
   });
 
@@ -17,44 +19,45 @@ export default function Contact() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     setLoading(true);
     setStatus("");
 
     try {
-      const res = await fetch("/api/contact", {
+      const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          message: formData.message,
-        }),
+        body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const data = await response.json();
 
-      if (data.success) {
-        setStatus("Message sent successfully ✅");
+      if (response.ok) {
+        setStatus("✅ Message sent successfully!");
+
         setFormData({
           name: "",
           email: "",
+          phone: "",
+          company: "",
           message: "",
         });
       } else {
-        setStatus("Something went wrong ❌");
+        setStatus(data.message || "❌ Something went wrong.");
       }
     } catch (error) {
-      setStatus("Server error ❌");
+      console.error(error);
+      setStatus("❌ Server error.");
     }
 
     setLoading(false);
@@ -62,7 +65,10 @@ export default function Contact() {
 
   return (
     <AnimatedSection>
-      <section id="contact" className="bg-slate-900 text-white py-24 px-6">
+      <section
+        id="contact"
+        className="bg-slate-900 text-white py-24 px-6"
+      >
         <div className="max-w-4xl mx-auto">
           <SectionTitle
             label="CONTACT"
@@ -71,10 +77,11 @@ export default function Contact() {
           />
 
           <form onSubmit={handleSubmit} className="space-y-6">
+
             <input
               required
-              name="name"
               type="text"
+              name="name"
               value={formData.name}
               onChange={handleChange}
               placeholder="Your Name"
@@ -83,20 +90,38 @@ export default function Contact() {
 
             <input
               required
-              name="email"
               type="email"
+              name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Your Email"
               className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500"
             />
 
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Phone Number"
+              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500"
+            />
+
+            <input
+              type="text"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              placeholder="Company Name"
+              className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500"
+            />
+
             <textarea
               required
+              rows={6}
               name="message"
               value={formData.message}
               onChange={handleChange}
-              rows={6}
               placeholder="Tell us about your project..."
               className="w-full p-4 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-blue-500"
             />
@@ -104,12 +129,22 @@ export default function Contact() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 disabled:opacity-60 px-8 py-4 rounded-xl font-semibold transition"
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-4 rounded-xl font-semibold transition"
             >
               {loading ? "Sending..." : "Send Message"}
             </button>
 
-            {status && <p className="text-green-400 font-medium">{status}</p>}
+            {status && (
+              <div
+                className={`text-center font-medium ${
+                  status.includes("✅")
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              >
+                {status}
+              </div>
+            )}
           </form>
         </div>
       </section>
