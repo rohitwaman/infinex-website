@@ -46,8 +46,8 @@ export async function POST(request: Request) {
       data: {
         name,
         email,
-        phone: phone || null,
-        company: company || null,
+        phone: phone || "",
+        company: company || "",
         message,
         status: "New",
       },

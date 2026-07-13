@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Portfolio {
@@ -32,18 +33,47 @@ model Contact {
 }
 
 model Blog {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  excerpt     String
-  content     String
-  coverImage  String?
-  author      String   @default("The Infinex Technologies")
+  id         String  @id @default(cuid())
+  title      String
+  slug       String  @unique
+  excerpt    String
+  content    String
+  coverImage String?
+  author     String  @default("The Infinex Technologies")
 
-  category    String   @default("Technology")
+  category String @default("Technology")
 
-  published   Boolean  @default(true)
+  published Boolean @default(true)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  title        String
+  slug         String   @unique
+  location     String
+  type         String
+  description  String
+  requirements String
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id        String   @id @default(cuid())
+  jobId     String
+  name      String
+  email     String
+  phone     String
+  resumeUrl String?
+  message   String?
+  status    String   @default("New")
+  createdAt DateTime @default(now())
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
 }
