@@ -43,16 +43,15 @@ export async function POST(request: Request) {
     }
 
     const contact = await prisma.contact.create({
-      data: {
-        name,
-        email,
-        phone: phone || "",
-        company: company || "",
-        message,
-        status: "New",
-      },
-    });
-
+  data: {
+    name,
+    email,
+    phone: phone || "",
+    company: company || "",
+    message,
+    status: "New",
+  },
+});
     return NextResponse.json(
       {
         success: true,
