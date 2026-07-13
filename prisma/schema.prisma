@@ -30,3 +30,20 @@ model Contact {
 
   createdAt DateTime @default(now())
 }
+
+model Blog {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String
+  content     String
+  coverImage  String?
+  author      String   @default("The Infinex Technologies")
+
+  category    String   @default("Technology")
+
+  published   Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
