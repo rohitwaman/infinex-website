@@ -27,11 +27,11 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const name = String(body.name || "").trim();
-    const email = String(body.email || "").trim();
-    const phone = String(body.phone || "").trim();
-    const company = String(body.company || "").trim();
-    const message = String(body.message || "").trim();
+    const name = String(body.name ?? "").trim();
+    const email = String(body.email ?? "").trim();
+    const phone = String(body.phone ?? "").trim();
+    const company = String(body.company ?? "").trim();
+    const message = String(body.message ?? "").trim();
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -43,15 +43,16 @@ export async function POST(request: Request) {
     }
 
     const contact = await prisma.contact.create({
-  data: {
-    name,
-    email,
-    phone: phone || "",
-    company: company || "",
-    message,
-    status: "New",
-  },
-});
+      data: {
+        name,
+        email,
+        phone,
+        company,
+        message,
+        status: "New",
+      },
+    });
+
     return NextResponse.json(
       {
         success: true,
