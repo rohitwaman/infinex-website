@@ -35,6 +35,10 @@ export default function Navbar() {
           <Link href="/#contact" className="hover:text-blue-400 transition">
             Contact
           </Link>
+
+          <Link href="/careers" className="hover:text-blue-400 transition">
+          Careers
+          </Link>
         </div>
 
         {/* CTA Button */}
