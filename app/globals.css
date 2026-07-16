@@ -172,3 +172,28 @@ body {
     opacity: 1;
   }
 }
+
+.hero-bg {
+  background:
+    radial-gradient(circle at top left, rgba(59,130,246,.25), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(168,85,247,.20), transparent 40%),
+    linear-gradient(135deg,#020617,#0f172a,#111827);
+}
+
+.glow-blue{
+  position:absolute;
+  width:400px;
+  height:400px;
+  background:#2563eb;
+  filter:blur(180px);
+  opacity:.25;
+}
+
+.glow-purple{
+  position:absolute;
+  width:350px;
+  height:350px;
+  background:#7c3aed;
+  filter:blur(170px);
+  opacity:.20;
+}

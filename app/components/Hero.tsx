@@ -20,8 +20,6 @@ const stats = [
 export default function Hero() {
   return (
     <section className="premium-background grid-background relative isolate min-h-screen overflow-hidden px-6 pb-20 pt-36 text-white">
-      {/* Animated glowing background */}
-
       <div className="glow-one absolute -left-32 top-20 h-[430px] w-[430px] rounded-full bg-blue-600/30 blur-[110px]" />
 
       <div className="glow-two absolute -right-32 top-32 h-[470px] w-[470px] rounded-full bg-purple-600/25 blur-[120px]" />
@@ -31,8 +29,6 @@ export default function Hero() {
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
 
       <div className="relative mx-auto grid min-h-[calc(100vh-9rem)] max-w-7xl items-center gap-16 lg:grid-cols-[1.05fr_0.95fr]">
-        {/* Left side */}
-
         <div>
           <div className="inline-flex items-center gap-3 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-300 backdrop-blur-xl">
             <span className="relative flex h-2.5 w-2.5">
@@ -52,10 +48,9 @@ export default function Hero() {
           </h1>
 
           <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
-            The Infinex Technologies creates powerful
-            software, AI products, premium websites, SaaS
-            platforms and scalable mobile applications for
-            modern businesses.
+            The Infinex Technologies creates powerful software, AI products,
+            premium websites, SaaS platforms and scalable mobile applications
+            for modern businesses.
           </p>
 
           <div className="mt-9 flex flex-col gap-4 sm:flex-row">
@@ -64,10 +59,7 @@ export default function Hero() {
               className="primary-button inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 px-8 py-4 text-base font-bold text-white transition duration-300 hover:-translate-y-1 hover:scale-[1.02]"
             >
               Build Your Project
-
-              <span className="ml-3 text-xl">
-                →
-              </span>
+              <span className="ml-3 text-xl">→</span>
             </Link>
 
             <Link
@@ -93,8 +85,6 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Right side */}
-
         <div className="relative mx-auto w-full max-w-xl">
           <div className="absolute -inset-10 rounded-[50px] bg-gradient-to-br from-blue-500/20 via-cyan-500/5 to-purple-500/25 blur-3xl" />
 
@@ -102,9 +92,7 @@ export default function Hero() {
             <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-red-400" />
-
                 <span className="h-3 w-3 rounded-full bg-yellow-400" />
-
                 <span className="h-3 w-3 rounded-full bg-green-400" />
               </div>
 
