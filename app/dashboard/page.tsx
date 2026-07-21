@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Contact = {
@@ -43,8 +42,6 @@ type Application = {
 };
 
 export default function DashboardPage() {
-  const router = useRouter();
-
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [projects, setProjects] = useState<Portfolio[]>([]);
   const [blogs, setBlogs] = useState<Blog[]>([]);
@@ -52,21 +49,19 @@ export default function DashboardPage() {
   const [applications, setApplications] = useState<Application[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isAdminLoggedIn");
+    void loadDashboardData();
+  }, []);
 
-    if (isLoggedIn !== "true") {
-      router.replace("/login");
-      return;
-    }
-
-    loadDashboardData();
-  }, [router]);
-
-  async function loadDashboardData() {
+  async function loadDashboardData(isRefresh = false) {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
 
       const [
         contactsResponse,
@@ -78,19 +73,15 @@ export default function DashboardPage() {
         fetch("/api/contact", {
           cache: "no-store",
         }),
-
         fetch("/api/portfolio", {
           cache: "no-store",
         }),
-
         fetch("/api/blog", {
           cache: "no-store",
         }),
-
         fetch("/api/jobs", {
           cache: "no-store",
         }),
-
         fetch("/api/apply", {
           cache: "no-store",
         }),
@@ -117,13 +108,8 @@ export default function DashboardPage() {
         : [];
 
       setContacts(Array.isArray(contactsData) ? contactsData : []);
-
-      setProjects(
-        Array.isArray(portfolioData) ? portfolioData : []
-      );
-
+      setProjects(Array.isArray(portfolioData) ? portfolioData : []);
       setBlogs(Array.isArray(blogsData) ? blogsData : []);
-
       setJobs(Array.isArray(jobsData) ? jobsData : []);
 
       setApplications(
@@ -133,14 +119,16 @@ export default function DashboardPage() {
       );
     } catch (error) {
       console.error("Dashboard data error:", error);
+
+      setContacts([]);
+      setProjects([]);
+      setBlogs([]);
+      setJobs([]);
+      setApplications([]);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }
-
-  function handleLogout() {
-    localStorage.removeItem("isAdminLoggedIn");
-    router.replace("/login");
   }
 
   const today = new Date().toDateString();
@@ -149,81 +137,64 @@ export default function DashboardPage() {
     return new Date(contact.createdAt).toDateString() === today;
   }).length;
 
-  const newEnquiries = contacts.filter(
-    (contact) =>
-      contact.status?.toLowerCase() === "new"
-  ).length;
+  const newEnquiries = contacts.filter((contact) => {
+    return contact.status?.toLowerCase() === "new";
+  }).length;
 
-  const publishedBlogs = blogs.filter(
-    (blog) => blog.published
-  ).length;
+  const publishedBlogs = blogs.filter((blog) => {
+    return blog.published;
+  }).length;
 
-  const activeJobs = jobs.filter((job) => job.active).length;
+  const activeJobs = jobs.filter((job) => {
+    return job.active;
+  }).length;
 
-  const newApplications = applications.filter(
-    (application) =>
-      application.status?.toLowerCase() === "new"
-  ).length;
+  const newApplications = applications.filter((application) => {
+    return application.status?.toLowerCase() === "new";
+  }).length;
 
   const recentContacts = contacts.slice(0, 5);
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <header className="border-b border-slate-800 bg-slate-900 px-6 py-5">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <main className="min-h-screen px-5 pb-12 pt-24 text-white sm:px-8 lg:px-10 lg:pt-10">
+      <div className="mx-auto max-w-7xl">
+        <header className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-sm font-semibold text-blue-400">
-              THE INFINEX TECHNOLOGIES
+            <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-400">
+              Overview
             </p>
 
-            <h1 className="mt-1 text-3xl font-bold">
+            <h1 className="mt-3 text-4xl font-black sm:text-5xl">
               Admin Dashboard
             </h1>
-          </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/"
-              className="rounded-xl border border-slate-700 px-5 py-3 font-semibold transition hover:bg-slate-800"
-            >
-              Visit Website
-            </Link>
-
-            <button
-              type="button"
-              onClick={loadDashboardData}
-              disabled={loading}
-              className="rounded-xl bg-blue-600 px-5 py-3 font-semibold transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? "Refreshing..." : "Refresh"}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="rounded-xl bg-red-600 px-5 py-3 font-semibold transition hover:bg-red-700"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        {loading ? (
-          <div className="flex min-h-[400px] items-center justify-center">
-            <p className="text-lg text-slate-400">
-              Loading dashboard...
+            <p className="mt-3 max-w-2xl text-slate-400">
+              Manage your website content, enquiries, portfolio,
+              blogs, jobs and applications.
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => void loadDashboardData(true)}
+            disabled={refreshing}
+            className="rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3.5 font-bold shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {refreshing ? "Refreshing..." : "Refresh Dashboard"}
+          </button>
+        </header>
+
+        {loading ? (
+          <DashboardLoading />
         ) : (
           <>
-            <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <section className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <DashboardCard
                 title="Total Enquiries"
                 value={contacts.length}
                 description="All client enquiries"
                 href="/dashboard/leads"
+                icon="✉"
               />
 
               <DashboardCard
@@ -231,6 +202,7 @@ export default function DashboardPage() {
                 value={newEnquiries}
                 description="Need your attention"
                 href="/dashboard/leads"
+                icon="◎"
               />
 
               <DashboardCard
@@ -238,6 +210,7 @@ export default function DashboardPage() {
                 value={todaysEnquiries}
                 description="Received today"
                 href="/dashboard/leads"
+                icon="◷"
               />
 
               <DashboardCard
@@ -245,6 +218,7 @@ export default function DashboardPage() {
                 value={projects.length}
                 description="Published projects"
                 href="/dashboard/portfolio"
+                icon="◆"
               />
 
               <DashboardCard
@@ -252,6 +226,7 @@ export default function DashboardPage() {
                 value={publishedBlogs}
                 description="Live company articles"
                 href="/dashboard/blog"
+                icon="▤"
               />
 
               <DashboardCard
@@ -259,13 +234,15 @@ export default function DashboardPage() {
                 value={activeJobs}
                 description="Open career positions"
                 href="/dashboard/jobs"
+                icon="▣"
               />
 
               <DashboardCard
                 title="Applications"
                 value={applications.length}
-                description="Total candidate applications"
+                description="Total applications"
                 href="/dashboard/applications"
+                icon="◉"
               />
 
               <DashboardCard
@@ -273,12 +250,13 @@ export default function DashboardPage() {
                 value={newApplications}
                 description="Candidates to review"
                 href="/dashboard/applications"
+                icon="★"
               />
             </section>
 
-            <section className="mt-10 grid gap-8 lg:grid-cols-3">
-              <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 lg:col-span-2">
-                <div className="flex items-center justify-between border-b border-slate-800 px-6 py-5">
+            <section className="mt-10 grid gap-8 xl:grid-cols-[1.7fr_0.8fr]">
+              <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 shadow-2xl shadow-black/20 backdrop-blur-xl">
+                <div className="flex flex-col gap-4 border-b border-slate-800 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-2xl font-bold">
                       Recent Enquiries
@@ -291,36 +269,31 @@ export default function DashboardPage() {
 
                   <Link
                     href="/dashboard/leads"
-                    className="text-sm font-semibold text-blue-400 hover:text-blue-300"
+                    className="text-sm font-semibold text-blue-400 transition hover:text-cyan-300"
                   >
-                    View All
+                    View All Leads →
                   </Link>
                 </div>
 
                 {recentContacts.length === 0 ? (
-                  <div className="px-6 py-14 text-center text-slate-400">
-                    No enquiries received yet.
+                  <div className="px-6 py-16 text-center">
+                    <p className="text-lg font-semibold text-slate-300">
+                      No enquiries received yet
+                    </p>
+
+                    <p className="mt-2 text-sm text-slate-500">
+                      New website enquiries will appear here.
+                    </p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[700px]">
-                      <thead className="bg-slate-950/60 text-left text-sm text-slate-400">
+                    <table className="w-full min-w-[760px]">
+                      <thead className="bg-slate-950/60 text-left text-xs uppercase tracking-widest text-slate-500">
                         <tr>
-                          <th className="px-6 py-4">
-                            Client
-                          </th>
-
-                          <th className="px-6 py-4">
-                            Company
-                          </th>
-
-                          <th className="px-6 py-4">
-                            Status
-                          </th>
-
-                          <th className="px-6 py-4">
-                            Date
-                          </th>
+                          <th className="px-6 py-4">Client</th>
+                          <th className="px-6 py-4">Company</th>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4">Date</th>
                         </tr>
                       </thead>
 
@@ -328,10 +301,10 @@ export default function DashboardPage() {
                         {recentContacts.map((contact) => (
                           <tr
                             key={contact.id}
-                            className="border-t border-slate-800"
+                            className="border-t border-slate-800/80 transition hover:bg-slate-800/40"
                           >
                             <td className="px-6 py-5">
-                              <p className="font-semibold">
+                              <p className="font-semibold text-white">
                                 {contact.name}
                               </p>
 
@@ -340,25 +313,20 @@ export default function DashboardPage() {
                               </p>
                             </td>
 
-                            <td className="px-6 py-5 text-slate-300">
-                              {contact.company ||
-                                "Not provided"}
+                            <td className="px-6 py-5 text-sm text-slate-300">
+                              {contact.company || "Not provided"}
                             </td>
 
                             <td className="px-6 py-5">
                               <StatusBadge
-                                status={
-                                  contact.status || "New"
-                                }
+                                status={contact.status || "New"}
                               />
                             </td>
 
                             <td className="px-6 py-5 text-sm text-slate-400">
                               {new Date(
                                 contact.createdAt
-                              ).toLocaleDateString(
-                                "en-IN"
-                              )}
+                              ).toLocaleDateString("en-IN")}
                             </td>
                           </tr>
                         ))}
@@ -368,103 +336,101 @@ export default function DashboardPage() {
                 )}
               </div>
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6">
+              <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/20 backdrop-blur-xl">
                 <h2 className="text-2xl font-bold">
                   Quick Actions
                 </h2>
 
                 <p className="mt-2 text-sm text-slate-400">
-                  Manage your website and company content
+                  Manage your website quickly
                 </p>
 
-                <div className="mt-6 space-y-4">
+                <div className="mt-6 space-y-3">
                   <QuickAction
                     title="View Leads"
                     description="Manage client enquiries"
                     href="/dashboard/leads"
+                    icon="◎"
                   />
 
                   <QuickAction
                     title="Add Project"
                     description="Create a portfolio project"
                     href="/dashboard/portfolio/new"
-                  />
-
-                  <QuickAction
-                    title="Manage Portfolio"
-                    description="View all published projects"
-                    href="/dashboard/portfolio"
+                    icon="+"
                   />
 
                   <QuickAction
                     title="Add New Blog"
                     description="Publish a company article"
                     href="/dashboard/blog/new"
-                  />
-
-                  <QuickAction
-                    title="Manage Blogs"
-                    description="Edit and delete articles"
-                    href="/dashboard/blog"
+                    icon="▤"
                   />
 
                   <QuickAction
                     title="Add New Job"
                     description="Create a career opening"
                     href="/dashboard/jobs/new"
+                    icon="▣"
                   />
 
                   <QuickAction
-                    title="Manage Jobs"
-                    description="View and manage openings"
-                    href="/dashboard/jobs"
-                  />
-
-                  <QuickAction
-                    title="Job Applications"
-                    description="Review candidate applications"
+                    title="Applications"
+                    description="Review candidates"
                     href="/dashboard/applications"
-                  />
-
-                  <QuickAction
-                    title="Public Careers Page"
-                    description="View open jobs on website"
-                    href="/careers"
+                    icon="◉"
                   />
 
                   <QuickAction
                     title="Visit Website"
-                    description="Open the public website"
+                    description="Open public website"
                     href="/"
+                    icon="↗"
                   />
                 </div>
               </div>
             </section>
 
-            <section className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <ManagementLink
-                title="Leads"
-                description="Manage client enquiries and statuses."
-                href="/dashboard/leads"
-              />
+            <section className="mt-10">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-400">
+                  Management
+                </p>
 
-              <ManagementLink
-                title="Portfolio"
-                description="Add and manage company projects."
-                href="/dashboard/portfolio"
-              />
+                <h2 className="mt-3 text-3xl font-black">
+                  Manage Your Platform
+                </h2>
+              </div>
 
-              <ManagementLink
-                title="Blogs"
-                description="Publish and manage SEO articles."
-                href="/dashboard/blog"
-              />
+              <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <ManagementLink
+                  title="Leads"
+                  description="Manage client enquiries and update their status."
+                  href="/dashboard/leads"
+                  icon="◎"
+                />
 
-              <ManagementLink
-                title="Careers"
-                description="Manage jobs and applications."
-                href="/dashboard/jobs"
-              />
+                <ManagementLink
+                  title="Portfolio"
+                  description="Add, edit and manage company projects."
+                  href="/dashboard/portfolio"
+                  icon="◆"
+                />
+
+                <ManagementLink
+                  title="Blogs"
+                  description="Publish and manage company articles."
+                  href="/dashboard/blog"
+                  icon="▤"
+                />
+
+                <ManagementLink
+                  title="Careers"
+                  description="Manage jobs and candidate applications."
+                  href="/dashboard/jobs"
+                  icon="▣"
+                />
+              </div>
             </section>
           </>
         )}
@@ -478,28 +444,40 @@ function DashboardCard({
   value,
   description,
   href,
+  icon,
 }: {
   title: string;
   value: number;
   description: string;
   href: string;
+  icon: string;
 }) {
   return (
     <Link
       href={href}
-      className="rounded-3xl border border-slate-800 bg-slate-900 p-6 transition hover:-translate-y-1 hover:border-blue-500"
+      className="group relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-blue-500/70"
     >
-      <p className="text-sm font-semibold text-slate-400">
-        {title}
-      </p>
+      <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-blue-500/10 blur-3xl transition group-hover:bg-cyan-500/20" />
 
-      <p className="mt-4 text-4xl font-bold">
-        {value}
-      </p>
+      <div className="relative flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-400">
+            {title}
+          </p>
 
-      <p className="mt-2 text-sm text-slate-500">
-        {description}
-      </p>
+          <p className="mt-4 text-4xl font-black text-white">
+            {value}
+          </p>
+
+          <p className="mt-2 text-sm text-slate-500">
+            {description}
+          </p>
+        </div>
+
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-500/20 bg-blue-500/10 text-xl text-blue-400">
+          {icon}
+        </span>
+      </div>
     </Link>
   );
 }
@@ -508,23 +486,31 @@ function QuickAction({
   title,
   description,
   href,
+  icon,
 }: {
   title: string;
   description: string;
   href: string;
+  icon: string;
 }) {
   return (
     <Link
       href={href}
-      className="block rounded-2xl border border-slate-800 bg-slate-950 p-5 transition hover:border-blue-500"
+      className="group flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-blue-500/60 hover:bg-slate-900"
     >
-      <p className="font-bold">
-        {title}
-      </p>
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 font-bold text-blue-400 transition group-hover:bg-blue-600 group-hover:text-white">
+        {icon}
+      </span>
 
-      <p className="mt-1 text-sm text-slate-400">
-        {description}
-      </p>
+      <div>
+        <p className="font-bold text-white">
+          {title}
+        </p>
+
+        <p className="mt-1 text-xs text-slate-400">
+          {description}
+        </p>
+      </div>
     </Link>
   );
 }
@@ -533,22 +519,32 @@ function ManagementLink({
   title,
   description,
   href,
+  icon,
 }: {
   title: string;
   description: string;
   href: string;
+  icon: string;
 }) {
   return (
     <Link
       href={href}
-      className="rounded-3xl border border-slate-800 bg-slate-900 p-6 transition hover:border-blue-500"
+      className="group rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl shadow-black/10 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-cyan-500/60"
     >
-      <h3 className="text-xl font-bold">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-xl text-cyan-400 transition group-hover:bg-cyan-500 group-hover:text-slate-950">
+        {icon}
+      </span>
+
+      <h3 className="mt-5 text-xl font-bold">
         {title}
       </h3>
 
       <p className="mt-2 text-sm leading-6 text-slate-400">
         {description}
+      </p>
+
+      <p className="mt-5 text-sm font-semibold text-blue-400">
+        Open Module →
       </p>
     </Link>
   );
@@ -561,21 +557,26 @@ function StatusBadge({
 }) {
   const normalizedStatus = status.toLowerCase();
 
-  let styles =
-    "bg-slate-500/15 text-slate-400";
+  let styles = "bg-slate-500/15 text-slate-400";
 
   if (normalizedStatus === "new") {
     styles = "bg-blue-500/15 text-blue-400";
   }
 
   if (normalizedStatus === "contacted") {
-    styles =
-      "bg-yellow-500/15 text-yellow-400";
+    styles = "bg-yellow-500/15 text-yellow-400";
   }
 
   if (normalizedStatus === "closed") {
-    styles =
-      "bg-green-500/15 text-green-400";
+    styles = "bg-green-500/15 text-green-400";
+  }
+
+  if (normalizedStatus === "shortlisted") {
+    styles = "bg-purple-500/15 text-purple-400";
+  }
+
+  if (normalizedStatus === "rejected") {
+    styles = "bg-red-500/15 text-red-400";
   }
 
   return (
@@ -584,5 +585,26 @@ function StatusBadge({
     >
       {status}
     </span>
+  );
+}
+
+function DashboardLoading() {
+  return (
+    <div className="mt-10">
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div
+            key={index}
+            className="h-40 animate-pulse rounded-3xl border border-slate-800 bg-slate-900/70"
+          />
+        ))}
+      </div>
+
+      <div className="mt-10 grid gap-8 xl:grid-cols-[1.7fr_0.8fr]">
+        <div className="h-[420px] animate-pulse rounded-3xl border border-slate-800 bg-slate-900/70" />
+
+        <div className="h-[420px] animate-pulse rounded-3xl border border-slate-800 bg-slate-900/70" />
+      </div>
+    </div>
   );
 }
