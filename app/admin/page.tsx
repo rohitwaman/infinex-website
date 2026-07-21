@@ -15,7 +15,7 @@ export default function LoginPage() {
 
     if (
       email === "admin@infinexhub.com" &&
-      password === "admin123"
+      password === "Infinex@2026"
     ) {
       localStorage.setItem("isAdminLoggedIn", "true");
       router.push("/dashboard");
@@ -76,7 +76,7 @@ export default function LoginPage() {
         <div className="mt-8 rounded-xl bg-slate-800 p-4 text-sm text-slate-300">
           <p className="font-semibold">Demo Credentials</p>
           <p>Email: admin@infinexhub.com</p>
-          <p>Password: admin123</p>
+          <p>Password: Infinex@2026</p>
         </div>
 
       </div>
